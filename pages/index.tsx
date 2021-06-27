@@ -1,22 +1,6 @@
+import Head from 'next/head';
 import MeetupList from '../components/meetups/MeetupList';
-import { NextApiRequest, NextApiResponse } from 'next';
-
-const DUMMY_MEETUPS = [
-    {
-        id: 'm1',
-        title: 'First meetup',
-        image: 'https://i1.wp.com/www.touristisrael.com/wp-content/uploads/2020/06/Best-areas-to-stay-in-Tel-Aviv-scaled-e1593008399620.jpg?w=1506&ssl=1',
-        address: 'Some street, Some city',
-        description: 'Some description',
-    },
-    {
-        id: 'm2',
-        title: 'Second meetup',
-        image: 'https://i1.wp.com/www.touristisrael.com/wp-content/uploads/2020/06/Best-areas-to-stay-in-Tel-Aviv-scaled-e1593008399620.jpg?w=1506&ssl=1',
-        address: 'Some street, Some city',
-        description: 'Some description',
-    },
-];
+import { MongoClient } from 'mongodb';
 
 type Props = {
     meetups: { id: string, title: string, image: string, address: string, description: string }[];
@@ -24,14 +8,31 @@ type Props = {
 
 const HomePage = (props: Props) => {
     return (
-        <MeetupList meetups={props.meetups} />
+        <>
+            <Head>
+                <title>React MeetUps</title>
+                <meta name="description" content="Browse a huge list of highly active React meetups!" />
+            </Head>
+            <MeetupList meetups={props.meetups} />
+        </>
     );
 };
 
 export async function getStaticProps() {
+    const client = await MongoClient.connect('mongodb+srv://vladimir:vladimir@nodejsatlas.tiqxb.mongodb.net/nextJsMeetups?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true });
+    const db = client.db();
+    const meetupsCollection = db.collection('meetups');
+    const meetups = await meetupsCollection.find().toArray();
+    client.close();
+
     return {
         props: {
-            meetups: DUMMY_MEETUPS,
+            meetups: meetups.map(meetup => ({
+                title: meetup.title,
+                address: meetup.address,
+                image: meetup.image,
+                id: meetup._id.toString(),
+            })),
         },
         revalidate: 3600,
     };

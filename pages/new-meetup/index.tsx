@@ -12,7 +12,7 @@ const NewMeetupPage = () => {
                 'Content-Type': 'application/json',
             }
         });
-        // router.push('/');
+        router.push('/');
     };
 
     return (
